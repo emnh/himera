@@ -19,7 +19,10 @@
 (defn generate-response [transformer data & [status]]
   (let [ret-val (transformer data)]
     {:status (or status 200)
-     :headers {"Content-Type" "application/clojure; charset=utf-8"}
+     :headers {
+               "Content-Type" "application/clojure; charset=utf-8"
+               "Access-Control-Allow-Origin:"  "*"
+               }
      :body ret-val}))
 
 (defn generate-jsonp-response 

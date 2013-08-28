@@ -30,7 +30,7 @@
                                        (str 
                                             (or callback "jsonp")
                                             "("
-                                            (pr-str {:js (string/trim-newline code)})
+                                            (pr-str (string/trim-newline code))
                                             ");")))))
 
 (def generate-js-response (partial generate-response
@@ -61,8 +61,10 @@
 
 (defroutes gethandler
   (GET "/compile-jsonp" [expr callback]
-       ;(generate-js-response {:result expr}))
        ((generate-jsonp-response callback) (cljs/compilation (readexpr expr) :simple false)))
+
+  (GET "/ast-jsonp" [expr callback]
+       ((generate-jsonp-response callback) (cljs/analyze (readexpr expr) :simple true)))
 
   (GET "/test" [name name2]
        (generate-js-response {:result (str name name2)})))

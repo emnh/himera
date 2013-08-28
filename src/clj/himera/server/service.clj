@@ -9,9 +9,11 @@
 (ns himera.server.service
   (:use compojure.core)
   (:use ring.middleware.clj-params)
+  (:use ring.middleware.params)
   (:require [clojure.string :as string])
   (:require [himera.server.cljs :as cljs]
             [compojure.route :as route]
+            [ring.middleware.reload :as reload]
             [ring.util.response :as resp]))
 
 (defn generate-response [transformer data & [status]]
@@ -19,6 +21,17 @@
     {:status (or status 200)
      :headers {"Content-Type" "application/clojure; charset=utf-8"}
      :body ret-val}))
+
+(defn generate-jsonp-response 
+     [callback]
+     (partial generate-response
+                                   (fn [data]
+                                     (let [code (or (:result data) "'HIMERA ERROR: NOTHING GENERATED'")]
+                                       (str 
+                                            (or callback "jsonp")
+                                            "("
+                                            (pr-str {:js (string/trim-newline code)})
+                                            ");")))))
 
 (def generate-js-response (partial generate-response
                                    (fn [data]
@@ -33,7 +46,7 @@
   (GET "/" [] (resp/redirect "/index.html"))
 
   (PUT "/" [name]
-       (generate-response {:hello name}))
+       (generate-js-response {:result name}))
 
   (POST "/compile" [expr]
         (generate-js-response (cljs/compilation expr :simple false)))
@@ -43,7 +56,20 @@
 
   (route/resources "/"))
 
+(defn readexpr [bstr] 
+     (binding [*read-eval* false] (read-string bstr)))
+
+(defroutes gethandler
+  (GET "/compile-jsonp" [expr callback]
+       ;(generate-js-response {:result expr}))
+       ((generate-jsonp-response callback) (cljs/compilation (readexpr expr) :simple false)))
+
+  (GET "/test" [name name2]
+       (generate-js-response {:result (str name name2)})))
+
 (def app
-  (-> handler
-      wrap-clj-params))
+  (-> (routes
+           (-> gethandler wrap-params)
+           (-> handler wrap-clj-params))
+      reload/wrap-reload))
 

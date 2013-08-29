@@ -22,6 +22,7 @@
      :headers {
                "Content-Type" "application/clojure; charset=utf-8"
                "Access-Control-Allow-Origin:"  "*"
+               "Access-Control-Allow-Headers"  "accept, origin, content-type"
                }
      :body ret-val}))
 

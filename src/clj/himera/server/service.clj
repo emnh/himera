@@ -22,6 +22,7 @@
      :headers {
                "Content-Type" "application/clojure; charset=utf-8"
                "Access-Control-Allow-Origin:"  "*"
+               "Access-Control-Allow-Methods"  "GET, POST, PUT, DELETE"
                "Access-Control-Allow-Headers"  "accept, origin, content-type"
                }
      :body ret-val}))
@@ -52,7 +53,7 @@
   (PUT "/" [name]
        (generate-js-response {:result name}))
 
-  (POST "/compile" [expr]
+  (ANY "/compile" [expr]
         (generate-js-response (cljs/compilation expr :simple false)))
 
   (POST "/ast" [expr]
@@ -64,6 +65,7 @@
      (binding [*read-eval* false] (read-string bstr)))
 
 (defroutes gethandler
+
   (GET "/compile-jsonp" [expr callback]
        ((generate-jsonp-response callback) (cljs/compilation (readexpr expr) :simple false)))
 
@@ -74,6 +76,12 @@
        (generate-js-response {:result (str name name2)})))
 
 (def app
+  (-> (routes gethandler handler)
+    wrap-params
+    wrap-clj-params
+    reload/wrap-reload))
+
+(def app2
   (-> (routes
            (-> gethandler wrap-params)
            (-> handler wrap-clj-params))

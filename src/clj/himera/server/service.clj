@@ -23,7 +23,7 @@
                "Content-Type" "application/clojure; charset=utf-8"
                "Access-Control-Allow-Origin:"  "*"
                "Access-Control-Allow-Methods"  "GET, POST, PUT, DELETE"
-               "Access-Control-Allow-Headers"  "accept, origin, content-type"
+               "Access-Control-Allow-Headers"  "accept, origin, content-type, x-csrf-token"
                }
      :body ret-val}))
 
